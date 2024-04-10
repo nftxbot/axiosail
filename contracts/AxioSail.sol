@@ -62,8 +62,7 @@ contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Bu
         return _baseURI();
     }
 
-    // The following functions are overrides required by Solidity.
-
+    // The following functions are overrides required by Solidity
     function _update(address to, uint256 tokenId, address auth)
         internal
         override(ERC721, ERC721Enumerable, ERC721Pausable)
