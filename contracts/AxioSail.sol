@@ -10,15 +10,15 @@ import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 
 contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Burnable {
-    // 用于确保每个签名只能使用一次
-    mapping(address => uint256) private nonces;
+    mapping(address => uint256) private _nonces;
     uint256 private _nextTokenId;
     mapping(address => bool) private _mintedTokens;
-    // 这是用来签名的地址，通常是后端服务保存的秘钥
-    address private managerAddress;
+    address private _managerAddress;
+    uint256 private _unlockTime; // four months
 
     constructor(address initialOwner, address manager) ERC721("AixoSail", "AMS") Ownable(initialOwner) {
-        managerAddress = manager;
+        _managerAddress = manager;
+        _unlockTime = block.timestamp + 10368000; // four months
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -34,9 +34,8 @@ contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Bu
     }
 
     function safeMint(address to, bytes calldata signature, uint256 nonce) public {
-        // nonces[to] != nonce 确保这个nonce之前没有被使用
         require(
-            nonces[to] != nonce, 
+            _nonces[to] != nonce, 
             "Invalid nonce"
         );
         require(
@@ -44,21 +43,31 @@ contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Bu
             "This address has already minted a token"
         );
         uint256 tokenId = _nextTokenId++;
-        bytes32 hash = keccak256(abi.encodePacked(to, nonce));
+        bytes32 hash = keccak256(
+            abi.encodePacked(to, nonce)
+        );
         bytes32 messageHash = MessageHashUtils.toEthSignedMessageHash(hash);
-        // 验证签名是否有效并且是指定的签名者提供的
+        address signer = ECDSA.recover(messageHash, signature);
         require(
-            ECDSA.recover(messageHash, signature) == managerAddress, 
+            (signer != address(0) && signer == _managerAddress),
             "Signature is invalid"
         );
-        // 保存nonce
-        nonces[to] = nonce;
+        _nonces[to] = nonce;
         _safeMint(to, tokenId);
+    }
+
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public override(ERC721, IERC721) {
+        require(block.timestamp >= _unlockTime, "ERC721: token is currently locked");
+        super.safeTransferFrom(from, to, tokenId, data);
+    }
+
+    function transferFrom(address from, address to, uint256 tokenId) public override(ERC721, IERC721) {
+        require(block.timestamp >= _unlockTime, "ERC721: token is currently locked");
+        super.transferFrom(from, to, tokenId);
     }
 
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         _requireOwned(tokenId);
-        // 直接返回固定的 URI，而不是基于tokenId的
         return _baseURI();
     }
 
