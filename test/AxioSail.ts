@@ -84,4 +84,19 @@ describe("AixoSail", function () {
         expect(uri).to.equal(expectedURI);
       });
 
+      it('should mint from golang gen signature', async function () {
+        const geminiProvider = AxioUtils.geminiNetworkProvider();
+        const ownerWallet = new ethers.Wallet(AxioUtils.Wallets[0].private_key);
+        const owner = ownerWallet.connect(geminiProvider);
+        // generate a nonce
+        const nonce = 1180978812;
+        console.log("nonce:", nonce);
+        const addr = "0x79a1215469FaB6f9c63c1816b45183AD3624bE34";
+        const signature = "0xffc47731e5963fd35da7f48daa5575153f5e46af5b42b6eae2fb06dc9cacc2c22408d673ca03567c33d9a221340da84e9a89ace1927f1ca0c04f431e078db45f1b"
+        // Mint a token
+        let resp = await axioSail.connect(owner).safeMint(addr, signature, nonce);
+        let txReceipt = await resp.wait();
+        console.log("tx response:" + JSON.stringify(txReceipt));
+      });
+
   });

@@ -57,12 +57,18 @@ contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Bu
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public override(ERC721, IERC721) {
-        require(block.timestamp >= _unlockTime, "ERC721: token is currently locked");
+        require(
+            block.timestamp >= _unlockTime, 
+            "ERC721: token is currently locked"
+        );
         super.safeTransferFrom(from, to, tokenId, data);
     }
 
     function transferFrom(address from, address to, uint256 tokenId) public override(ERC721, IERC721) {
-        require(block.timestamp >= _unlockTime, "ERC721: token is currently locked");
+        require(
+            block.timestamp >= _unlockTime, 
+            "ERC721: token is currently locked"
+        );
         super.transferFrom(from, to, tokenId);
     }
 
