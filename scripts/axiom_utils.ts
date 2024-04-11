@@ -64,6 +64,7 @@ export async function deploy(prikey: string, abi: ethers.Interface | ethers.Inte
         const signerAddress = await signer.getAddress();
         const manager = new ethers.Wallet(Wallets[1].private_key);
         const contract = await instance.deploy(signerAddress, manager.address);
+        console.log("deployer address:", signerAddress, "manager address:", manager.address);
         const txReceipt = await contract.deploymentTransaction()?.wait();
         const address = txReceipt?.contractAddress;
         return address;
