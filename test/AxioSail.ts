@@ -68,10 +68,11 @@ describe("AixoSail", function () {
         // generate a nonce
         const nonce = Math.floor(Math.random() * 1000000);
         console.log("nonce:", nonce);
-        const packedDataHash = ethers.solidityPackedKeccak256(['address', 'uint256'], [owner.address, nonce]);
+        const manager = new ethers.Wallet(AxioUtils.Wallets[1].private_key);
+        const packedDataHash = ethers.solidityPackedKeccak256(['address', 'uint256'], [manager.address, nonce]);
         console.log("msg hash:", packedDataHash);
         const bytesHash = ethers.toBeArray(packedDataHash);
-        const signature = await ownerWallet.signMessage(bytesHash);
+        const signature = await manager.signMessage(bytesHash);
         // Mint a token
         let resp = await axioSail.connect(owner).safeMint(owner.address, signature, nonce);
         let txMint = await resp.wait();
@@ -97,6 +98,34 @@ describe("AixoSail", function () {
         let resp = await axioSail.connect(owner).safeMint(addr, signature, nonce);
         let txReceipt = await resp.wait();
         console.log("tx response:" + JSON.stringify(txReceipt));
+        // Replace with actual token ID and expected URI
+        const tokenId = 0;
+        const expectedURI = 'https://raw.githubusercontent.com/ajaxsunrise/ajaxsunrise/main/axio_col.json';
+        const uri = await axioSail.tokenURI(tokenId);
+        console.log("uri:", uri);
+        expect(uri).to.equal(expectedURI);
+        // getOwnedTokens
+        const tokenIds = await axioSail.getOwnedTokens(addr);
+        console.log("tokenIds:", tokenIds);
+        // --------------  Mint a token 1 ------------------
+        // generate a nonce
+        const nonce1 = 1180978812;
+        console.log("nonce1:", nonce1);
+        // solidity packed data then hash
+        const manager = new ethers.Wallet(AxioUtils.Wallets[1].private_key);
+        // minter's address plus nonce
+        const packedDataHash = ethers.solidityPackedKeccak256(['address', 'uint256'], [owner.address, nonce1]);
+        console.log("msg hash:", packedDataHash);
+        // sign the hash
+        const signature1 = await manager.signMessage(ethers.toBeArray(packedDataHash));
+        console.log("signature:", signature1);
+        // Mint a token
+        let resp1 = await axioSail.connect(owner).safeMint(owner.address, signature1, nonce1);
+        let txMint = await resp1.wait();
+        console.log("tx response:" + txMint?.toJSON());
+        // getOwnedTokens
+        const tokenIds1 = await axioSail.getOwnedTokens(owner.address);
+        console.log("tokenIds:", tokenIds1);
       });
 
   });

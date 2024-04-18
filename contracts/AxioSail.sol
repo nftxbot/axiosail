@@ -12,13 +12,16 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Burnable {
     mapping(address => uint256) private _nonces;
     uint256 private _nextTokenId;
-    mapping(address => bool) private _mintedTokens;
+    mapping(address => uint256) private _mintedTokens;
     address private _managerAddress;
     uint256 private _unlockTime; // four months
+    mapping(address => uint256[]) private _ownedTokens;
+    uint256 private totalMinted;
 
     constructor(address initialOwner, address manager) ERC721("AixoSail", "AMS") Ownable(initialOwner) {
         _managerAddress = manager;
         _unlockTime = block.timestamp + 10368000; // four months
+        totalMinted = 1;
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -39,7 +42,7 @@ contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Bu
             "Invalid nonce"
         );
         require(
-            !_mintedTokens[to], 
+            _mintedTokens[to] < totalMinted,
             "This address has already minted a token"
         );
         uint256 tokenId = _nextTokenId++;
@@ -54,6 +57,8 @@ contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Bu
         );
         _nonces[to] = nonce;
         _safeMint(to, tokenId);
+        _mintedTokens[to]++; // minted token count++
+        _addTokenToOwner(to, tokenId); // track owned tokens
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public override(ERC721, IERC721) {
@@ -62,6 +67,10 @@ contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Bu
             "ERC721: token is currently locked"
         );
         super.safeTransferFrom(from, to, tokenId, data);
+        _removeTokenFromOwner(from, tokenId);
+        _mintedTokens[from]--;
+        _addTokenToOwner(to, tokenId);
+        _mintedTokens[to]++;
     }
 
     function transferFrom(address from, address to, uint256 tokenId) public override(ERC721, IERC721) {
@@ -70,6 +79,10 @@ contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Bu
             "ERC721: token is currently locked"
         );
         super.transferFrom(from, to, tokenId);
+        _removeTokenFromOwner(from, tokenId);
+        _mintedTokens[from]--;
+        _addTokenToOwner(to, tokenId);
+        _mintedTokens[to]++;
     }
 
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
@@ -100,5 +113,28 @@ contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Bu
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    function getOwnedTokens(address owner) public view returns (uint256[] memory) {
+        return _ownedTokens[owner];
+    }
+
+    function setMintedTokens(uint256 value) public onlyOwner {
+        totalMinted = value;
+    }
+
+    function _removeTokenFromOwner(address owner, uint256 tokenId) private {
+        uint256[] storage ownedTokens = _ownedTokens[owner];
+        for (uint256 i = 0; i < ownedTokens.length; i++) {
+            if (ownedTokens[i] == tokenId) {
+                ownedTokens[i] = ownedTokens[ownedTokens.length - 1];
+                ownedTokens.pop();
+                break;
+            }
+        }
+    }
+
+    function _addTokenToOwner(address owner, uint256 tokenId) private {
+        _ownedTokens[owner].push(tokenId);
     }
 }
