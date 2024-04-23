@@ -43,7 +43,7 @@ contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Bu
         );
         require(
             _mintedTokens[to] < totalMinted,
-            "This address has already minted a token"
+            "Each address can only claim once, You have already claimed one"
         );
         uint256 tokenId = _nextTokenId++;
         bytes32 hash = keccak256(
