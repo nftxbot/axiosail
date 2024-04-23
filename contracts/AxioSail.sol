@@ -55,8 +55,8 @@ contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Bu
             (signer != address(0) && signer == _managerAddress),
             "Signature is invalid"
         );
-        _nonces[to] = nonce;
         _safeMint(to, tokenId);
+         _nonces[to] = nonce;
         _mintedTokens[to]++; // minted token count++
         _addTokenToOwner(to, tokenId); // track owned tokens
     }

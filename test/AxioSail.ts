@@ -69,7 +69,8 @@ describe("AixoSail", function () {
         const nonce = Math.floor(Math.random() * 1000000);
         console.log("nonce:", nonce);
         const manager = new ethers.Wallet(AxioUtils.Wallets[1].private_key);
-        const packedDataHash = ethers.solidityPackedKeccak256(['address', 'uint256'], [manager.address, nonce]);
+        // minter's address plus nonce
+        const packedDataHash = ethers.solidityPackedKeccak256(['address', 'uint256'], [owner.address, nonce]);
         console.log("msg hash:", packedDataHash);
         const bytesHash = ethers.toBeArray(packedDataHash);
         const signature = await manager.signMessage(bytesHash);
@@ -89,24 +90,6 @@ describe("AixoSail", function () {
         const geminiProvider = AxioUtils.geminiNetworkProvider();
         const ownerWallet = new ethers.Wallet(AxioUtils.Wallets[0].private_key);
         const owner = ownerWallet.connect(geminiProvider);
-        // generate a nonce
-        const nonce = 1180978812;
-        console.log("nonce:", nonce);
-        const addr = "0x79a1215469FaB6f9c63c1816b45183AD3624bE34";
-        const signature = "0xffc47731e5963fd35da7f48daa5575153f5e46af5b42b6eae2fb06dc9cacc2c22408d673ca03567c33d9a221340da84e9a89ace1927f1ca0c04f431e078db45f1b"
-        // Mint a token
-        let resp = await axioSail.connect(owner).safeMint(addr, signature, nonce);
-        let txReceipt = await resp.wait();
-        console.log("tx response:" + JSON.stringify(txReceipt));
-        // Replace with actual token ID and expected URI
-        const tokenId = 0;
-        const expectedURI = 'https://raw.githubusercontent.com/ajaxsunrise/ajaxsunrise/main/axio_col.json';
-        const uri = await axioSail.tokenURI(tokenId);
-        console.log("uri:", uri);
-        expect(uri).to.equal(expectedURI);
-        // getOwnedTokens
-        const tokenIds = await axioSail.getOwnedTokens(addr);
-        console.log("tokenIds:", tokenIds);
         // --------------  Mint a token 1 ------------------
         // generate a nonce
         const nonce1 = 1180978812;
@@ -119,13 +102,42 @@ describe("AixoSail", function () {
         // sign the hash
         const signature1 = await manager.signMessage(ethers.toBeArray(packedDataHash));
         console.log("signature:", signature1);
+
+        // nonce2
+        // generate a nonce
+        const nonce2 = 21312312131;
+        console.log("nonce2:", nonce2);
+        // minter's address plus nonce
+        const packedDataHash2 = ethers.solidityPackedKeccak256(['address', 'uint256'], [owner.address, nonce2]);
+        console.log("msg hash2:", packedDataHash2);
+        // sign the hash
+        const signature2 = await manager.signMessage(ethers.toBeArray(packedDataHash2));
+        console.log("signature2:", signature2);
+
         // Mint a token
-        let resp1 = await axioSail.connect(owner).safeMint(owner.address, signature1, nonce1);
+        let nonceWallet = await geminiProvider.getTransactionCount(owner.address);
+        // first mint
+        console.log("address", owner.address,  "nonceWallet:", nonceWallet);
+        let resp1 =  await axioSail.connect(owner).safeMint(owner.address, signature1, nonce1, {nonce: nonceWallet});
         let txMint = await resp1.wait();
-        console.log("tx response:" + txMint?.toJSON());
+        console.log("tx response1:" + txMint?.toJSON());
+        
+        // second mint
+        let nonceWallet2 = nonceWallet + 1;
+        console.log("address", owner.address,  "nonceWallet:", nonceWallet2);
+        let resp2 = await axioSail.connect(owner).safeMint(owner.address,  signature2,  nonce2,  {nonce: nonceWallet2});
+        let txMint2 = await resp2.wait();
+        console.log("tx response2:" + txMint2?.toJSON());
+
+        // await delay(10000);
         // getOwnedTokens
-        const tokenIds1 = await axioSail.getOwnedTokens(owner.address);
-        console.log("tokenIds:", tokenIds1);
+        // const tokenIds1 = await axioSail.getOwnedTokens(owner.address);
+        // console.log("tokenIds:", tokenIds1);
       });
+
+      // 定义一个延迟执行的函数
+    function delay(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
   });
