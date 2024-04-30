@@ -18,7 +18,7 @@ contract AxioSail is ERC721, ERC721Enumerable, ERC721Pausable, Ownable, ERC721Bu
     mapping(address => uint256[]) private _ownedTokens;
     uint256 private totalMinted;
 
-    constructor(address initialOwner, address manager) ERC721("AixoSail", "AMS") Ownable(initialOwner) {
+    constructor(address initialOwner, address manager) ERC721("Axiomesh Early Adopter", "AEA") Ownable(initialOwner) {
         _managerAddress = manager;
         _unlockTime = block.timestamp + 10368000; // four months
         totalMinted = 1;

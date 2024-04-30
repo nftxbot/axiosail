@@ -8,7 +8,7 @@ dotenv.config();
 export const NETWORK_URL = process.env.NETWORK_URL || 'https://rpc5.gemini.axiomesh.io'
 export const NETWORK_WS_URL = process.env.NETWORK_WS_URL || 'https://rpc5.gemini.axiomesh.io'
 // 国内IP被禁，需要使用代理
-export const HTTP_PROXY = process.env.HTTP_PROXY || "http://127.0.0.1:10900"
+export const HTTP_PROXY = process.env.HTTP_PROXY || "http://127.0.0.1:3213"
 // deployer
 export const DEPLOYER = process.env.DEPLOYER || "0xc7F999b83Af6DF9e67d0a37Ee7e900bF38b3D013"
 export const DEPLOYER_PRIV = process.env.DEPLOYER_PRIV || ""
